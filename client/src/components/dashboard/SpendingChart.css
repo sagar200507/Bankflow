@@ -1,0 +1,80 @@
+/* ═══════════════════════════════════════════════════════════════
+   SpendingChart — Area Chart with Glassmorphism Wrapper
+   ═══════════════════════════════════════════════════════════════ */
+
+.spending-chart {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ──────────────────────────────────────────────────── */
+.spending-chart__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+.spending-chart__title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text);
+}
+
+.spending-chart__period {
+  font-size: var(--text-sm);
+  color: var(--text-dim);
+  font-weight: var(--font-medium);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+}
+
+/* ── Chart Container ─────────────────────────────────────────── */
+.spending-chart__container {
+  flex: 1;
+  min-height: 250px;
+}
+
+/* ── Custom Tooltip ──────────────────────────────────────────── */
+.chart-tooltip {
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-xl);
+}
+
+.chart-tooltip__label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin-bottom: var(--space-1);
+  font-weight: var(--font-medium);
+}
+
+.chart-tooltip__value {
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  color: var(--text);
+}
+
+/* ── Empty / Loading ─────────────────────────────────────────── */
+.spending-chart__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 250px;
+  color: var(--text-dim);
+  font-size: var(--text-sm);
+}

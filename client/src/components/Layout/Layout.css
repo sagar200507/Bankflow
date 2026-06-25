@@ -1,0 +1,62 @@
+/* ===== Layout Shell ===== */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.layout__main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.layout__content {
+  flex: 1;
+  padding: var(--space-xl);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Smooth scrollbar */
+.layout__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.layout__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.layout__content::-webkit-scrollbar-thumb {
+  background: var(--glass-border);
+  border-radius: 10px;
+}
+
+.layout__content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Page transition wrapper */
+.layout__page {
+  width: 100%;
+  max-width: 1400px;
+}
+
+/* ===== Responsive ===== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 72px 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .layout__content {
+    padding: var(--space-md);
+  }
+}

@@ -1,0 +1,212 @@
+/* ===== App Layout ===== */
+.app {
+  position: relative;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+/* ===== Floating Particles Background ===== */
+.particles-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  opacity: 0.08;
+  animation: particleFloat linear infinite;
+}
+
+.particle:nth-child(1) {
+  width: 4px;
+  height: 4px;
+  top: 12%;
+  left: 8%;
+  animation-duration: 22s;
+  animation-delay: 0s;
+}
+
+.particle:nth-child(2) {
+  width: 6px;
+  height: 6px;
+  top: 35%;
+  left: 72%;
+  background: var(--accent-purple);
+  opacity: 0.06;
+  animation-duration: 28s;
+  animation-delay: -4s;
+}
+
+.particle:nth-child(3) {
+  width: 3px;
+  height: 3px;
+  top: 68%;
+  left: 25%;
+  background: var(--accent-green);
+  opacity: 0.1;
+  animation-duration: 18s;
+  animation-delay: -8s;
+}
+
+.particle:nth-child(4) {
+  width: 5px;
+  height: 5px;
+  top: 82%;
+  left: 55%;
+  background: var(--accent-amber);
+  opacity: 0.07;
+  animation-duration: 25s;
+  animation-delay: -2s;
+}
+
+.particle:nth-child(5) {
+  width: 4px;
+  height: 4px;
+  top: 20%;
+  left: 90%;
+  opacity: 0.09;
+  animation-duration: 20s;
+  animation-delay: -6s;
+}
+
+.particle:nth-child(6) {
+  width: 7px;
+  height: 7px;
+  top: 50%;
+  left: 40%;
+  background: var(--accent-purple);
+  opacity: 0.05;
+  animation-duration: 30s;
+  animation-delay: -10s;
+}
+
+.particle:nth-child(7) {
+  width: 3px;
+  height: 3px;
+  top: 90%;
+  left: 15%;
+  background: var(--accent-green);
+  opacity: 0.08;
+  animation-duration: 24s;
+  animation-delay: -3s;
+}
+
+.particle:nth-child(8) {
+  width: 5px;
+  height: 5px;
+  top: 5%;
+  left: 50%;
+  background: var(--accent-amber);
+  opacity: 0.06;
+  animation-duration: 26s;
+  animation-delay: -7s;
+}
+
+.particle:nth-child(9) {
+  width: 4px;
+  height: 4px;
+  top: 45%;
+  left: 5%;
+  opacity: 0.07;
+  animation-duration: 19s;
+  animation-delay: -12s;
+}
+
+.particle:nth-child(10) {
+  width: 6px;
+  height: 6px;
+  top: 75%;
+  left: 85%;
+  background: var(--accent-purple);
+  opacity: 0.06;
+  animation-duration: 32s;
+  animation-delay: -5s;
+}
+
+.particle:nth-child(11) {
+  width: 3px;
+  height: 3px;
+  top: 28%;
+  left: 35%;
+  background: var(--accent-green);
+  opacity: 0.09;
+  animation-duration: 21s;
+  animation-delay: -9s;
+}
+
+.particle:nth-child(12) {
+  width: 5px;
+  height: 5px;
+  top: 60%;
+  left: 65%;
+  background: var(--accent-amber);
+  opacity: 0.05;
+  animation-duration: 27s;
+  animation-delay: -1s;
+}
+
+@keyframes particleFloat {
+  0% {
+    transform: translateY(0) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.08;
+  }
+  50% {
+    transform: translateY(-120px) translateX(60px) scale(1.2);
+  }
+  90% {
+    opacity: 0.08;
+  }
+  100% {
+    transform: translateY(-240px) translateX(-30px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* ===== Page Content (above particles) ===== */
+.app-content {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+/* ===== Page Transition Wrapper ===== */
+.page-transition {
+  min-height: 100vh;
+}
+
+/* ===== Protected Route Loading Spinner ===== */
+.page-loading {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.page-loading__spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--card-border);
+  border-top-color: var(--accent-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

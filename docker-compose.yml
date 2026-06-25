@@ -1,0 +1,58 @@
+# ──────────────────────────────────────────────────────────────
+# BankFlow — Docker Compose (Development)
+# ──────────────────────────────────────────────────────────────
+# Spins up PostgreSQL and Redis so you don't need local installs.
+#
+# Usage:
+#   docker compose up -d          # start services
+#   docker compose down           # stop and remove containers
+#   docker compose down -v        # stop + delete volumes (wipes data)
+#   docker compose logs -f postgres  # tail PG logs
+#
+# The backend (Express) and frontend (Vite) run natively on your host
+# machine via `npm run dev` for hot-reload during development.
+# ──────────────────────────────────────────────────────────────
+
+version: '3.9'
+
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: bankflow-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bankflow
+      POSTGRES_USER: bankflow_admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bankflow_dev_password}
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bankflow_admin -d bankflow']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Redis ──────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: bankflow-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
