@@ -1,62 +1,50 @@
-/* ===== Layout Shell ===== */
-.layout {
-  display: grid;
-  grid-template-columns: 260px 1fr;
-  min-height: 100vh;
-  background: var(--bg-primary);
-}
+/* ═══════════════════════════════════════════════════════════════
+   Layout — Application Shell
+   ═══════════════════════════════════════════════════════════════ */
 
-.layout__main {
+.layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  overflow: hidden;
+  background-color: #F1F5F9;
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+.layout::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.layout__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 .layout__content {
   flex: 1;
-  padding: var(--space-xl);
-  overflow-y: auto;
-  overflow-x: hidden;
+  width: 100%;
+  max-width: var(--max-content-width, 1200px);
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
 }
 
-/* Smooth scrollbar */
-.layout__content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.layout__content::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.layout__content::-webkit-scrollbar-thumb {
-  background: var(--glass-border);
-  border-radius: 10px;
-}
-
-.layout__content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* Page transition wrapper */
 .layout__page {
   width: 100%;
-  max-width: 1400px;
-}
-
-/* ===== Responsive ===== */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .layout {
-    grid-template-columns: 72px 1fr;
-  }
 }
 
 @media (max-width: 768px) {
-  .layout {
-    grid-template-columns: 1fr;
-  }
-
   .layout__content {
-    padding: var(--space-md);
+    padding: var(--space-6) var(--space-4);
   }
 }

@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from './context/AuthContext';
 
 import Layout from './components/Layout/Layout';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import AccountsPage from './pages/AccountsPage';
 import TransactionsPage from './pages/TransactionsPage';
@@ -86,6 +86,16 @@ function App() {
           <Routes location={location} key={location.pathname}>
             {/* ── Public routes ──────────────────────────────── */}
             <Route
+              path="/"
+              element={
+                <PublicRoute>
+                  <AnimatedPage>
+                    <LandingPage />
+                  </AnimatedPage>
+                </PublicRoute>
+              }
+            />
+            <Route
               path="/login"
               element={
                 <PublicRoute>
@@ -97,13 +107,7 @@ function App() {
             />
             <Route
               path="/register"
-              element={
-                <PublicRoute>
-                  <AnimatedPage>
-                    <RegisterPage />
-                  </AnimatedPage>
-                </PublicRoute>
-              }
+              element={<Navigate to="/login?tab=register" replace />}
             />
 
             {/* ── Protected routes — wrapped in shared Layout ─ */}

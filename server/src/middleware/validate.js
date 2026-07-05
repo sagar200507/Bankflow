@@ -149,8 +149,16 @@ const transfer = [
     .withMessage('Invalid source account ID'),
 
   body('toAccountId')
-    .isUUID(4)
-    .withMessage('Invalid destination account ID'),
+    .isString()
+    .trim()
+    .custom((value) => {
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+      const isAccountNumber = /^\d{12}$/.test(value);
+      if (!isUUID && !isAccountNumber) {
+        throw new Error('Destination account ID must be a valid UUID or 12-digit account number');
+      }
+      return true;
+    }),
 
   body('amount')
     .isFloat({ min: 0.01, max: 10000000 })

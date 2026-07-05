@@ -78,7 +78,7 @@ const AccountCards = ({ accounts = [] }) => {
                     {formatCurrency(account.balance)}
                   </span>
                   <span className="account-card__currency">
-                    {account.currency || 'USD'}
+                    {account.currency || 'INR'}
                   </span>
                 </div>
 

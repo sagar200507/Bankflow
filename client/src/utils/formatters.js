@@ -39,6 +39,15 @@ export const getTypeColor = (type) => {
   return map[type] || 'var(--text-muted)';
 };
 
+export const getTransactionAmountStyling = (type) => {
+  const isIncoming = type === 'deposit';
+  return {
+    prefix: isIncoming ? '+' : '-',
+    color: isIncoming ? 'var(--accent-green)' : type === 'withdrawal' ? 'var(--danger)' : 'var(--text-primary)',
+    cssClass: isIncoming ? 'transaction-row__amount--credit' : type === 'withdrawal' ? 'transaction-row__amount--debit' : 'transaction-row__amount--neutral'
+  };
+};
+
 export const maskAccountNumber = (num) => {
   if (!num) return '—';
   const str = String(num);

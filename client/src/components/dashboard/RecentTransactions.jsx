@@ -13,7 +13,7 @@ import {
   ArrowLeftRight,
   Receipt,
 } from 'lucide-react';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import { formatCurrency, formatDate, getTransactionAmountStyling } from '../../utils/formatters';
 import './RecentTransactions.css';
 
 const typeConfig = {
@@ -114,14 +114,9 @@ const RecentTransactions = ({ transactions = [] }) => {
 
                 {/* Amount */}
                 <div
-                  className={`transaction-row__amount ${
-                    isCredit
-                      ? 'transaction-row__amount--credit'
-                      : 'transaction-row__amount--debit'
-                  }`}
+                  className={`transaction-row__amount ${getTransactionAmountStyling(tx.type).cssClass}`}
                 >
-                  {isCredit ? '+' : '-'}
-                  {formatCurrency(Math.abs(tx.amount))}
+                  {getTransactionAmountStyling(tx.type).prefix}{formatCurrency(Math.abs(tx.amount))}
                 </div>
 
                 {/* Status badge */}

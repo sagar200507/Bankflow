@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Plus, ArrowDownLeft, ArrowUpRight, X } from 'lucide-react';
-import { accountsAPI } from '../services/api';
-import { formatCurrency, formatAccountNumber } from '../utils/formatters';
+import { Wallet, Plus, ArrowDownLeft, ArrowUpRight, X, Copy } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { accountsAPI, transactionsAPI } from '../services/api';
+import { formatCurrency, formatAccountNumber, formatDateTime, getTransactionAmountStyling } from '../utils/formatters';
 import toast, { Toaster } from 'react-hot-toast';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './AccountsPage.css';
 
 export default function AccountsPage() {
+  const { user } = useAuth();
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState([]);
+  const [loadingTxns, setLoadingTxns] = useState(true);
   const [modal, setModal] = useState(null); // 'create' | 'deposit' | 'withdraw'
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [formData, setFormData] = useState({ accountType: 'savings', amount: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const fetchAccounts = async () => {
     try {
@@ -22,7 +29,34 @@ export default function AccountsPage() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchAccounts(); }, []);
+  const fetchTransactions = async () => {
+    try {
+      const { data } = await transactionsAPI.getAll({ limit: 5 });
+      setTransactions(data.data.transactions || []);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingTxns(false);
+    }
+  };
+
+  useEffect(() => { 
+    fetchAccounts(); 
+    fetchTransactions();
+  }, []);
+
+  // Handle auto-opening deposit modal from Dashboard "Add funds" link
+  useEffect(() => {
+    if (location.state?.openDeposit && accounts.length > 0) {
+      const activeAccount = accounts.find(a => a.status === 'active');
+      if (activeAccount) {
+        setModal('deposit');
+        setSelectedAccount(activeAccount);
+        // Clear the state so it doesn't re-trigger on refresh
+        navigate(location.pathname, { replace: true, state: {} });
+      }
+    }
+  }, [accounts, location, navigate]);
 
   const handleCreate = async (e) => {
     e.preventDefault(); setSubmitting(true);
@@ -59,7 +93,6 @@ export default function AccountsPage() {
       <motion.div className="accounts-page" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <div className="accounts-header">
           <div><h1>Your Accounts</h1><p>{accounts.length} account{accounts.length !== 1 ? 's' : ''}</p></div>
-          <button className="btn-create" onClick={() => setModal('create')}><Plus size={18} /><span>New Account</span></button>
         </div>
 
         {loading ? (
@@ -74,7 +107,22 @@ export default function AccountsPage() {
                   <span className="acc-type-badge" style={{ background: `${typeColors[acc.account_type]}20`, color: typeColors[acc.account_type] }}>{acc.account_type}</span>
                   <span className="acc-status"><span className="status-dot" style={{ background: acc.status === 'active' ? 'var(--accent-green)' : 'var(--danger)' }} />{acc.status}</span>
                 </div>
-                <div className="acc-number">{formatAccountNumber(acc.account_number)}</div>
+                <div className="acc-holder-name">
+                  {user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : 'Account Holder'}
+                </div>
+                <div className="acc-number-wrapper">
+                  <div className="acc-number">{formatAccountNumber(acc.account_number)}</div>
+                  <button 
+                    className="copy-btn" 
+                    title="Copy full account number"
+                    onClick={() => {
+                      navigator.clipboard.writeText(acc.account_number);
+                      toast.success('Account number copied!');
+                    }}
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
                 <div className="acc-balance">{formatCurrency(acc.balance)}</div>
                 <div className="acc-currency">{acc.currency}</div>
                 <div className="acc-actions">
@@ -83,8 +131,52 @@ export default function AccountsPage() {
                 </div>
               </motion.div>
             ))}
+            
+            <motion.div 
+              className="account-card-placeholder"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: accounts.length * 0.1 }}
+              onClick={() => setModal('create')}
+            >
+              <div className="placeholder-content">
+                <div className="placeholder-icon"><Plus size={24} /></div>
+                <span>Add another account</span>
+              </div>
+            </motion.div>
           </div>
         )}
+
+        <div className="recent-txns-section">
+          <div className="recent-txns-header">
+            <h2>Recent Transactions</h2>
+            <Link to="/dashboard/transactions" className="view-all-link">View all</Link>
+          </div>
+          <div className="recent-txns-card">
+            {loadingTxns ? (
+              <div className="txn-loading">{[1,2,3].map(i => <div key={i} className="preview-txn-row skeleton" />)}</div>
+            ) : transactions.length === 0 ? (
+              <div className="empty-state-small"><p>No transactions yet</p></div>
+            ) : (
+              <div className="preview-txn-list">
+                {transactions.map((txn, i) => {
+                  const isIncoming = txn.type === 'deposit';
+                  return (
+                    <motion.div key={txn.id} className="preview-txn-row" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                      <div className="preview-txn-info">
+                        <div className="preview-txn-desc">{txn.description || txn.type}</div>
+                        <div className="preview-txn-date">{formatDateTime(txn.created_at)}</div>
+                      </div>
+                      <div className="preview-txn-amount" style={{ color: getTransactionAmountStyling(txn.type).color }}>
+                        {getTransactionAmountStyling(txn.type).prefix}{formatCurrency(txn.amount)}
+                      </div>
+                    </motion.div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        </div>
       </motion.div>
 
       <AnimatePresence>

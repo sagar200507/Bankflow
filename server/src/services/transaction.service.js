@@ -46,6 +46,17 @@ const TransactionService = {
    * @returns {{ transaction: object, fromAccount: object, toAccount: object }}
    */
   async transfer({ fromAccountId, toAccountId, amount, description, userId, ipAddress }) {
+    // ── Resolve Account Number to UUID ───────────────────────
+    // If the user entered a 12-digit account number instead of a UUID, resolve it first
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(toAccountId)) {
+      const targetAccount = await AccountModel.findByAccountNumber(toAccountId);
+      if (!targetAccount) {
+        throw ApiError.badRequest('Destination account not found. Please check the account number and try again.');
+      }
+      toAccountId = targetAccount.id;
+    }
+
     // ── Pre-validation (outside transaction for fast failure) ──
     if (fromAccountId === toAccountId) {
       throw ApiError.badRequest('Cannot transfer to the same account');

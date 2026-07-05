@@ -191,6 +191,7 @@ DECLARE
   v_account_count    INTEGER;
   v_total_txns       INTEGER;
   v_monthly_spending NUMERIC(15,2);
+  v_monthly_income   NUMERIC(15,2);
   v_fraud_flags      INTEGER;
   v_pending_txns     INTEGER;
 BEGIN
@@ -213,14 +214,23 @@ BEGIN
   JOIN accounts a ON (t.from_account_id = a.id OR t.to_account_id = a.id)
   WHERE a.user_id = p_user_id AND t.status = 'completed';
 
-  -- This month's spending (outgoing)
+  -- Last 30 days spending (outgoing)
   SELECT COALESCE(SUM(t.amount), 0)
   INTO v_monthly_spending
   FROM transactions t
   JOIN accounts a ON t.from_account_id = a.id
   WHERE a.user_id = p_user_id
     AND t.status = 'completed'
-    AND t.created_at >= DATE_TRUNC('month', NOW());
+    AND t.created_at >= NOW() - INTERVAL '30 days';
+
+  -- Last 30 days income (incoming)
+  SELECT COALESCE(SUM(t.amount), 0)
+  INTO v_monthly_income
+  FROM transactions t
+  JOIN accounts a ON t.to_account_id = a.id
+  WHERE a.user_id = p_user_id
+    AND t.status = 'completed'
+    AND t.created_at >= NOW() - INTERVAL '30 days';
 
   -- Unresolved fraud flags
   SELECT COUNT(*)
@@ -240,6 +250,7 @@ BEGIN
     'account_count', v_account_count,
     'total_transactions', v_total_txns,
     'monthly_spending', v_monthly_spending,
+    'monthly_income', v_monthly_income,
     'fraud_flags', v_fraud_flags,
     'pending_transactions', v_pending_txns
   );

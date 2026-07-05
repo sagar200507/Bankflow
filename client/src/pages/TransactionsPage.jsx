@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, FileText } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, FileText, Download } from 'lucide-react';
 import { transactionsAPI, accountsAPI } from '../services/api';
-import { formatCurrency, formatDateTime, getStatusColor, getTypeColor } from '../utils/formatters';
+import { formatCurrency, formatDateTime, getStatusColor, getTypeColor, getTransactionAmountStyling } from '../utils/formatters';
+import { generateReceipt } from '../utils/receiptGenerator';
 import toast, { Toaster } from 'react-hot-toast';
 import './TransactionsPage.css';
 
@@ -60,11 +61,18 @@ export default function TransactionsPage() {
                       <span className="txn-desc">{txn.description || txn.type}</span>
                       <span className="txn-ref">{txn.reference_number}</span>
                     </div>
-                    <div className="txn-amount" style={{ color: txn.type === 'deposit' ? 'var(--accent-green)' : txn.type === 'withdrawal' ? 'var(--danger)' : 'var(--accent-blue)' }}>
-                      {txn.type === 'deposit' ? '+' : '-'}{formatCurrency(txn.amount)}
+                    <div className="txn-amount" style={{ color: getTransactionAmountStyling(txn.type).color }}>
+                      {getTransactionAmountStyling(txn.type).prefix}{formatCurrency(txn.amount)}
                     </div>
                     <span className="txn-status" style={{ background: `${getStatusColor(txn.status)}15`, color: getStatusColor(txn.status) }}>{txn.status}</span>
                     <span className="txn-date">{formatDateTime(txn.created_at)}</span>
+                    <button 
+                      className="txn-receipt-btn" 
+                      onClick={() => generateReceipt(txn)}
+                      title="Download Receipt"
+                    >
+                      <Download size={16} />
+                    </button>
                   </motion.div>
                 );
               })}

@@ -1,86 +1,52 @@
-/**
- * ═══════════════════════════════════════════════════════════════
- *  DashboardPage — Main Dashboard Composition
- * ═══════════════════════════════════════════════════════════════
- *  Fetches analytics data and composes all dashboard widgets.
- *  Layout: Stats → Accounts + Chart → Recent Transactions
- * ═══════════════════════════════════════════════════════════════
- */
-
 import React, { useState, useEffect } from 'react';
-
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   Wallet,
+  ArrowDownToLine,
+  ArrowUpFromLine,
   Landmark,
-  ArrowLeftRight,
-  CreditCard,
+  ShieldAlert,
+  X,
+  Send,
+  FileText,
+  PlusCircle,
+  BarChart3,
+  ArrowRight
 } from 'lucide-react';
 
 import StatCard from '../components/dashboard/StatCard';
-import AccountCards from '../components/dashboard/AccountCards';
-import SpendingChart from '../components/dashboard/SpendingChart';
 import RecentTransactions from '../components/dashboard/RecentTransactions';
 import { useAuth } from '../context/AuthContext';
 import { analyticsAPI } from '../services/api';
-import { formatCurrency } from '../utils/formatters';
-
 import './DashboardPage.css';
 
-/* ── Page transition variants ────────────────────────────────── */
 const pageVariants = {
-  initial: { opacity: 0, y: 20 },
-  animate: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.25, 0.46, 0.45, 0.94],
-    },
-  },
-  exit: {
-    opacity: 0,
-    y: -10,
-    transition: { duration: 0.3 },
-  },
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] } },
+  exit: { opacity: 0, y: -10, transition: { duration: 0.3 } },
 };
 
-/* ── Loading Skeleton ────────────────────────────────────────── */
-const DashboardSkeleton = () => (
-  <div className="dashboard-page">
-    <div className="dashboard-page__header">
-      <div className="skeleton" style={{ width: 280, height: 36, marginBottom: 8 }} />
-      <div className="skeleton" style={{ width: 200, height: 20 }} />
-    </div>
-    <div className="skeleton-stat-grid">
-      {[...Array(4)].map((_, i) => (
-        <div key={i} className="skeleton skeleton-stat" />
-      ))}
-    </div>
-    <div className="skeleton-middle">
-      <div className="skeleton skeleton-card-tall" />
-      <div className="skeleton skeleton-card-tall" />
-    </div>
-    <div className="skeleton skeleton-card-wide" />
-  </div>
-);
-
-const DashboardPage = () => {
+export default function DashboardPage() {
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // TODO: Add real fraud alert endpoint + wire banner to it.
+  // const [showFraudBanner, setShowFraudBanner] = useState(false);
+  // const fraudEventId = 'fraud-evt-8492';
 
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
         setLoading(true);
+        setError(null);
         const { data } = await analyticsAPI.getDashboard();
         setDashboardData(data.data);
       } catch (err) {
         console.error('Dashboard fetch error:', err);
-        setError(err.message);
-        setDashboardData(getDemoData());
+        setError('Unable to load dashboard data. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -89,10 +55,28 @@ const DashboardPage = () => {
     fetchDashboard();
   }, []);
 
-  if (loading) return <DashboardSkeleton />;
+  if (loading) {
+    return (
+      <div className="dashboard-page dashboard-skeleton">
+        <div className="skeleton" style={{ width: 280, height: 36, marginBottom: 8 }} />
+        <div className="skeleton" style={{ width: 200, height: 20, marginBottom: 32 }} />
+        <div className="skeleton-stat-grid">
+          {[...Array(4)].map((_, i) => <div key={i} className="skeleton skeleton-stat" />)}
+        </div>
+      </div>
+    );
+  }
 
-  const { stats, recentTransactions, accounts, spendingData } =
-    dashboardData || getDemoData();
+  if (error) {
+    return (
+      <div className="dashboard-page dashboard-error">
+        <h2>Dashboard Error</h2>
+        <p>{error}</p>
+      </div>
+    );
+  }
+
+  const { stats, recentTransactions } = dashboardData || {};
 
   return (
     <motion.div
@@ -102,181 +86,129 @@ const DashboardPage = () => {
       animate="animate"
       exit="exit"
     >
-      {/* ── Header ───────────────────────────────────────────── */}
-      <motion.div
-        className="dashboard-page__header"
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.05 }}
-      >
-        <h1 className="dashboard-page__greeting">
-          Welcome back, <span>{user?.first_name || 'User'}</span>
-        </h1>
-        <p className="dashboard-page__subtitle">
-          Here's an overview of your finances today
-        </p>
-      </motion.div>
+      {/* 
+        TODO: Uncomment and wire to real backend when fraud endpoint exists.
+        <AnimatePresence>
+          {showFraudBanner && (
+            <motion.div 
+              className="fraud-banner"
+              initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+              animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
+              exit={{ opacity: 0, height: 0, marginBottom: 0, overflow: 'hidden' }}
+            >
+              <div className="fraud-banner__content">
+                <ShieldAlert size={20} className="fraud-banner__icon" />
+                <div>
+                  <strong>Security Notice:</strong> We blocked a suspicious login attempt from an unrecognized device in Moscow, RU yesterday. Your account is secured.
+                </div>
+              </div>
+              <button className="fraud-banner__close" onClick={dismissFraudBanner} aria-label="Dismiss">
+                <X size={18} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      */}
 
-      {/* ── Row 1: Stat Cards ────────────────────────────────── */}
-      <div className="dashboard-page__stats">
-        <div className="stat-cards-grid">
-          <StatCard
-            icon={Wallet}
-            label="Total Balance"
-            value={stats?.totalBalance}
-            change={stats?.balanceChange}
-            color="blue"
-            isCurrency
-            index={0}
-          />
-          <StatCard
-            icon={Landmark}
-            label="Accounts"
-            value={stats?.totalAccounts}
-            change={stats?.accountsChange}
-            color="purple"
-            isCurrency={false}
-            index={1}
-          />
-          <StatCard
-            icon={ArrowLeftRight}
-            label="Transactions"
-            value={stats?.totalTransactions}
-            change={stats?.transactionsChange}
-            color="green"
-            isCurrency={false}
-            index={2}
-          />
-          <StatCard
-            icon={CreditCard}
-            label="Monthly Spending"
-            value={stats?.monthlySpending}
-            change={stats?.spendingChange}
-            color="amber"
-            isCurrency
-            index={3}
-          />
+      {/* ── Header ── */}
+      <header className="dashboard-header">
+        <div className="dashboard-header__text">
+          <h1>Welcome back, {user?.first_name || 'User'}</h1>
+          <p>Here's what's happening with your accounts today.</p>
+        </div>
+        <div className="dashboard-header__actions">
+          <Link to="/transfer" className="btn-primary">
+            <Send size={16} /> New transfer
+          </Link>
+        </div>
+      </header>
+
+      {/* ── Stat Row (4 cards) ── */}
+      <div className="stat-cards-grid">
+        <StatCard
+          icon={Wallet}
+          label="Total Balance"
+          value={stats?.total_balance}
+          change={stats?.balance_change}
+          color="blue"
+          isCurrency
+          index={0}
+        />
+        <StatCard
+          icon={ArrowDownToLine}
+          label="Recent Income (30d)"
+          value={stats?.monthly_income}
+          change={4.2} // Mocked change since we don't have historical delta
+          color="mint"
+          isCurrency
+          index={1}
+        />
+        <StatCard
+          icon={ArrowUpFromLine}
+          label="Spend (30d)"
+          value={stats?.monthly_spending}
+          change={stats?.spending_change}
+          color="amber"
+          isCurrency
+          index={2}
+        />
+        <div className="stat-card">
+          <div className="stat-card__icon stat-card__icon--purple"><Landmark size={20} /></div>
+          <div className="stat-card__label">Active loan status</div>
+          <div className="stat-card__value">Not enrolled</div>
         </div>
       </div>
 
-      {/* ── Row 2: Accounts + Chart ──────────────────────────── */}
-      <div className="dashboard-page__middle">
-        <AccountCards accounts={accounts} />
-        <SpendingChart data={spendingData} />
+      {/* ── Two-Column Body ── */}
+      <div className="dashboard-body">
+        
+        {/* Left Column: Recent Transactions */}
+        <div className="dashboard-body__left">
+          <RecentTransactions transactions={recentTransactions} />
+        </div>
+
+        {/* Right Column: Quick Actions & Loan CTA */}
+        <div className="dashboard-body__right">
+          
+          <div className="panel quick-actions">
+            <h3 className="panel__title">Quick Actions</h3>
+            <div className="quick-actions__grid">
+              <Link to="/transfer" className="action-btn">
+                <Send size={20} />
+                <span>Send money</span>
+              </Link>
+              <button className="action-btn" disabled style={{ opacity: 0.6, cursor: 'not-allowed' }}>
+                <FileText size={20} />
+                <span>Coming soon</span>
+              </button>
+              <Link to="/accounts" state={{ openDeposit: true }} className="action-btn">
+                <PlusCircle size={20} />
+                <span>Add funds</span>
+              </Link>
+              <Link to="/transactions" className="action-btn">
+                <BarChart3 size={20} />
+                <span>View analytics</span>
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ── Row 3: Recent Transactions ───────────────────────── */}
-      <div className="dashboard-page__bottom">
-        <RecentTransactions transactions={recentTransactions} />
+      {/* ── Bottom Section: Promo/Loans ── */}
+      <div className="dashboard-bottom">
+        <div className="panel loan-cta">
+          <div className="loan-cta__info">
+            <div className="loan-cta__icon"><Landmark size={24} /></div>
+            <div className="loan-cta__text">
+              <h3>Flexible business loans</h3>
+              <p>You don't have an active loan. Get up to ₹25,00,000 in capital based on your revenue.</p>
+            </div>
+          </div>
+          <button className="btn-secondary loan-cta__btn" disabled>
+            Coming soon
+          </button>
+        </div>
       </div>
     </motion.div>
   );
-};
-
-/* ── Demo / fallback data ────────────────────────────────────── */
-function getDemoData() {
-  return {
-    stats: {
-      totalBalance: 284750.63,
-      balanceChange: 12.5,
-      totalAccounts: 4,
-      accountsChange: 0,
-      totalTransactions: 1243,
-      transactionsChange: 8.3,
-      monthlySpending: 4285.92,
-      spendingChange: -3.2,
-    },
-    accounts: [
-      {
-        id: '1',
-        type: 'Checking',
-        accountNumber: '4821739856',
-        balance: 45230.85,
-        currency: 'USD',
-        status: 'active',
-      },
-      {
-        id: '2',
-        type: 'Savings',
-        accountNumber: '7293018465',
-        balance: 189520.78,
-        currency: 'USD',
-        status: 'active',
-      },
-      {
-        id: '3',
-        type: 'Business',
-        accountNumber: '5018273640',
-        balance: 50000.0,
-        currency: 'USD',
-        status: 'active',
-      },
-    ],
-    recentTransactions: [
-      {
-        id: 't1',
-        type: 'deposit',
-        description: 'Salary Deposit — Acme Corp',
-        amount: 8500,
-        date: new Date(Date.now() - 86400000).toISOString(),
-        status: 'completed',
-      },
-      {
-        id: 't2',
-        type: 'withdrawal',
-        description: 'AWS Cloud Services',
-        amount: 349.99,
-        date: new Date(Date.now() - 172800000).toISOString(),
-        status: 'completed',
-      },
-      {
-        id: 't3',
-        type: 'transfer',
-        description: 'Transfer to Savings',
-        amount: 2000,
-        date: new Date(Date.now() - 259200000).toISOString(),
-        status: 'completed',
-      },
-      {
-        id: 't4',
-        type: 'withdrawal',
-        description: 'Figma Pro Subscription',
-        amount: 15,
-        date: new Date(Date.now() - 345600000).toISOString(),
-        status: 'completed',
-      },
-      {
-        id: 't5',
-        type: 'deposit',
-        description: 'Freelance Payment — Design',
-        amount: 3200,
-        date: new Date(Date.now() - 432000000).toISOString(),
-        status: 'completed',
-      },
-      {
-        id: 't6',
-        type: 'withdrawal',
-        description: 'Uber Ride',
-        amount: 24.5,
-        date: new Date(Date.now() - 518400000).toISOString(),
-        status: 'pending',
-      },
-    ],
-    spendingData: [
-      { month: 'Jan', spending: 3200 },
-      { month: 'Feb', spending: 2800 },
-      { month: 'Mar', spending: 4100 },
-      { month: 'Apr', spending: 3600 },
-      { month: 'May', spending: 2950 },
-      { month: 'Jun', spending: 4285 },
-      { month: 'Jul', spending: 3800 },
-      { month: 'Aug', spending: 3100 },
-      { month: 'Sep', spending: 3650 },
-      { month: 'Oct', spending: 2700 },
-      { month: 'Nov', spending: 4500 },
-      { month: 'Dec', spending: 3900 },
-    ],
-  };
 }
-
-export default DashboardPage;

@@ -1,0 +1,146 @@
+.features-carousel-section {
+  position: relative;
+  margin: var(--space-24) 0;
+  padding: 0 var(--space-6);
+  isolation: isolate;
+}
+
+.fc-content-wrapper {
+  max-width: var(--max-content-width, 1200px);
+  margin: 0 auto;
+  background: radial-gradient(circle at 70% 30%, #221E54, var(--ink));
+  border-radius: var(--radius-3xl);
+  padding: var(--space-16) 0;
+  color: white;
+  overflow: hidden;
+  position: relative;
+  /* Prevent background clipping artifacts on rounded corners in Safari */
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+
+.fc-header h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-12);
+  text-align: center;
+  color: white;
+}
+
+.fc-viewport {
+  width: 100%;
+  outline: none;
+  /* Indent track from the left, but allow scrolling flush to the right edge */
+  padding-left: var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .fc-viewport {
+    padding-left: var(--space-12);
+  }
+}
+
+.fc-track {
+  display: flex;
+  gap: var(--space-6); /* 24px */
+  cursor: grab;
+  width: max-content;
+}
+
+.fc-track:active {
+  cursor: grabbing;
+}
+
+.fc-card {
+  width: calc(85vw - var(--space-12));
+  max-width: 400px;
+  background: var(--paper);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  color: var(--ink);
+  flex-shrink: 0;
+  box-shadow: var(--shadow-xl);
+  user-select: none;
+  border: 1px solid var(--line);
+  /* The transition is handled by framer-motion, but we add a will-change for perf */
+  will-change: transform, opacity;
+}
+
+.fc-card__icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(67, 56, 202, 0.08);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--indigo);
+  margin-bottom: var(--space-6);
+}
+
+.fc-card h4 {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-2);
+}
+
+.fc-card p {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  line-height: var(--leading-relaxed);
+}
+
+/* Controls */
+.fc-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-6);
+  margin-top: var(--space-12);
+}
+
+.fc-arrow {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.fc-arrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.fc-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.fc-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.fc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all var(--transition-fast);
+}
+
+.fc-dot.active {
+  background: white;
+  width: 24px;
+  border-radius: 4px;
+}

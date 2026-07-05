@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, ArrowRight, CheckCircle, AlertCircle } from 'lucide-react';
+import { Send, ArrowRight, CheckCircle, AlertCircle, Download } from 'lucide-react';
 import { accountsAPI, transactionsAPI } from '../services/api';
 import { formatCurrency, formatAccountNumber } from '../utils/formatters';
+import { generateReceipt } from '../utils/receiptGenerator';
 import toast, { Toaster } from 'react-hot-toast';
 import './TransferPage.css';
 
@@ -12,6 +13,7 @@ export default function TransferPage() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ fromAccountId: '', toAccountId: '', amount: '', description: '' });
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     accountsAPI.getAll().then(({ data }) => {
@@ -33,6 +35,7 @@ export default function TransferPage() {
 
   const handleTransfer = async () => {
     setLoading(true);
+    setError(null);
     try {
       const { data } = await transactionsAPI.transfer({
         fromAccountId: form.fromAccountId,
@@ -44,7 +47,12 @@ export default function TransferPage() {
       setStep('success');
       toast.success('Transfer successful!');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Transfer failed');
+      let errorMsg = err.response?.data?.message || 'Transfer failed. Please check the destination account and try again.';
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        errorMsg = err.response.data.errors.map(e => e.message).join(' | ');
+      }
+      toast.error(errorMsg);
+      setError(errorMsg);
       setStep('form');
     } finally {
       setLoading(false);
@@ -54,6 +62,7 @@ export default function TransferPage() {
   const resetForm = () => {
     setForm({ fromAccountId: accounts[0]?.id || '', toAccountId: '', amount: '', description: '' });
     setResult(null);
+    setError(null);
     setStep('form');
   };
 
@@ -75,6 +84,12 @@ export default function TransferPage() {
             {step === 'form' && (
               <motion.form key="form" className="transfer-card" onSubmit={handleConfirm} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                 <div className="transfer-card-header"><Send size={24} /><h2>Transfer Details</h2></div>
+                {error && (
+                  <div className="form-error-banner" style={{ background: 'var(--danger-light, rgba(239, 68, 68, 0.1))', color: 'var(--danger)', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <AlertCircle size={16} />
+                    {error}
+                  </div>
+                )}
                 <label className="form-label">From Account</label>
                 <select className="form-input" value={form.fromAccountId} onChange={(e) => setForm({ ...form, fromAccountId: e.target.value })} required>
                   {accounts.map((a) => <option key={a.id} value={a.id}>{a.account_type} · {formatAccountNumber(a.account_number)} · {formatCurrency(a.balance)}</option>)}
@@ -119,7 +134,16 @@ export default function TransferPage() {
                 <h2>Transfer Complete!</h2>
                 <p className="success-amount">{formatCurrency(parseFloat(form.amount))}</p>
                 {result?.transaction?.reference_number && <p className="success-ref">Ref: {result.transaction.reference_number}</p>}
-                <button className="auth-submit" onClick={resetForm} style={{ marginTop: 24 }}><span>New Transfer</span><ArrowRight size={18} /></button>
+                
+                <div className="success-actions" style={{ display: 'flex', gap: '12px', marginTop: '24px', width: '100%' }}>
+                  <button className="btn-secondary" onClick={() => generateReceipt(result.transaction, `${selectedFrom?.account_type} · ${formatAccountNumber(selectedFrom?.account_number)}`, form.toAccountId)} style={{ flex: 1 }}>
+                    <Download size={18} />
+                    <span>Receipt</span>
+                  </button>
+                  <button className="auth-submit" onClick={resetForm} style={{ flex: 1 }}>
+                    <span>New Transfer</span><ArrowRight size={18} />
+                  </button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

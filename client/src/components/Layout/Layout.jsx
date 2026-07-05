@@ -1,7 +1,5 @@
-import { useState, useCallback, useMemo } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import Sidebar from './Sidebar';
 import TopBar from './TopBar';
 import './Layout.css';
 
@@ -17,44 +15,13 @@ const pageTransition = {
   duration: 0.3,
 };
 
-/* Map route paths to page titles */
-const ROUTE_TITLES = {
-  '/dashboard': 'Dashboard',
-  '/accounts': 'Accounts',
-  '/transactions': 'Transactions',
-  '/transfer': 'Transfer Funds',
-};
-
 function Layout() {
   const location = useLocation();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const title = useMemo(
-    () => ROUTE_TITLES[location.pathname] || 'BankFlow',
-    [location.pathname]
-  );
-
-  const handleMenuToggle = useCallback(() => {
-    setSidebarOpen((prev) => !prev);
-  }, []);
-
-  const handleSidebarClose = useCallback(() => {
-    setSidebarOpen(false);
-  }, []);
 
   return (
     <div className="layout">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={handleSidebarClose}
-      />
-
+      <TopBar />
       <main className="layout__main">
-        <TopBar
-          title={title}
-          onMenuToggle={handleMenuToggle}
-        />
-
         <div className="layout__content">
           <AnimatePresence mode="wait">
             <motion.div
