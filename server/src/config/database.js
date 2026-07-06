@@ -26,8 +26,13 @@ const pool = new Pool({
   password: config.db.password,
   min: config.db.poolMin,
   max: config.db.poolMax,
-  // Return numeric types as floats instead of strings
-  // (PG returns bigint/numeric as strings by default)
+
+  // Neon PostgreSQL requires SSL in production
+  ssl:
+    config.nodeEnv === 'production'
+      ? { rejectUnauthorized: false }
+      : false,
+
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,
 });
