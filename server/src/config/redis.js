@@ -22,14 +22,17 @@ const redisOptions = {
   host: config.redis.host,
   port: config.redis.port,
   password: config.redis.password || undefined,
+
+  tls: config.nodeEnv === 'production' ? {} : undefined,
+
   maxRetriesPerRequest: 3,
+
   retryStrategy(times) {
-    // Exponential backoff: 50ms, 100ms, 200ms… capped at 2s
     const delay = Math.min(times * 50, 2000);
     logger.warn(`Redis reconnecting in ${delay}ms (attempt ${times})`);
     return delay;
   },
-  // Fail fast in dev so broken Redis doesn't silently degrade
+
   lazyConnect: config.nodeEnv === 'production',
 };
 
