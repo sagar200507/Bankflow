@@ -37,11 +37,11 @@ export default function FeaturesCarousel() {
   }, []);
 
   const handleNext = () => {
-    if (activeIndex < features.length - 1) setActiveIndex(prev => prev + 1);
+    setActiveIndex(prev => (prev + 1) % features.length);
   };
 
   const handlePrev = () => {
-    if (activeIndex > 0) setActiveIndex(prev => prev - 1);
+    setActiveIndex(prev => (prev - 1 + features.length) % features.length);
   };
 
   const handleKeyDown = (e) => {
@@ -52,9 +52,9 @@ export default function FeaturesCarousel() {
   const onDragEnd = (event, info) => {
     const swipeThreshold = 50;
     // info.offset.x is negative when swiping left (going to next)
-    if (info.offset.x < -swipeThreshold && activeIndex < features.length - 1) {
+    if (info.offset.x < -swipeThreshold) {
       handleNext();
-    } else if (info.offset.x > swipeThreshold && activeIndex > 0) {
+    } else if (info.offset.x > swipeThreshold) {
       handlePrev();
     }
   };
@@ -118,7 +118,6 @@ export default function FeaturesCarousel() {
           <button 
             className="fc-arrow" 
             onClick={handlePrev} 
-            disabled={activeIndex === 0}
             aria-label="Previous feature"
           >
             <ChevronLeft size={24} />
@@ -140,7 +139,6 @@ export default function FeaturesCarousel() {
           <button 
             className="fc-arrow" 
             onClick={handleNext} 
-            disabled={activeIndex === features.length - 1}
             aria-label="Next feature"
           >
             <ChevronRight size={24} />
