@@ -34,6 +34,8 @@ const MIGRATION_FILES = [
   '006_fraud_flags.sql',
   '007_audit_logs.sql',
   '008_indexes.sql',
+  '009_fraud_explanations.sql',
+  '010_ledger_entries.sql',
 ];
 
 async function runMigrations() {

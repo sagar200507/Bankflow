@@ -99,28 +99,34 @@ const TransactionModel = {
     // Count query — needed for pagination metadata
     const countResult = await pool.query(
       `SELECT COUNT(*)::int AS total
-       FROM transactions
-       WHERE from_account_id = $1 OR to_account_id = $1`,
+       FROM ledger_entries
+       WHERE account_id = $1`,
       [accountId]
     );
 
-    // Data query with JOINs for account numbers
+    // Data query with JOINs for account numbers and transaction metadata
     const { rows } = await pool.query(
-      `SELECT t.id, t.from_account_id, t.to_account_id,
-              t.type, t.amount, t.currency, t.status,
-              t.description, t.reference_number, t.balance_after,
-              t.ip_address, t.created_at,
+      `SELECT le.transaction_id, le.entry_type, le.amount, le.balance_after, 
+              COALESCE(le.description, t.description) AS description, le.created_at,
+              t.id, t.status, t.currency, t.ip_address,
+              t.reference_number, t.type AS transaction_type,
               fa.account_number AS from_account_number,
               ta.account_number AS to_account_number,
+              fa.account_type AS from_account_type,
+              ta.account_type AS to_account_type,
+              fa.user_id AS from_user_id,
+              ta.user_id AS to_user_id,
               fu.first_name || ' ' || fu.last_name AS from_user_name,
-              tu.first_name || ' ' || tu.last_name AS to_user_name
-       FROM transactions t
+              tu.first_name || ' ' || tu.last_name AS to_user_name,
+              EXISTS (SELECT 1 FROM fraud_flags ff WHERE ff.transaction_id = t.id) AS is_flagged
+       FROM ledger_entries le
+       JOIN transactions t ON le.transaction_id = t.id
        LEFT JOIN accounts fa ON t.from_account_id = fa.id
        LEFT JOIN accounts ta ON t.to_account_id = ta.id
        LEFT JOIN users fu ON fa.user_id = fu.id
        LEFT JOIN users tu ON ta.user_id = tu.id
-       WHERE t.from_account_id = $1 OR t.to_account_id = $1
-       ORDER BY t.created_at DESC
+       WHERE le.account_id = $1
+       ORDER BY le.created_at DESC
        LIMIT $2 OFFSET $3`,
       [accountId, limit, offset]
     );
@@ -146,35 +152,38 @@ const TransactionModel = {
 
     const countResult = await pool.query(
       `SELECT COUNT(*)::int AS total
-       FROM transactions t
-       JOIN accounts a ON (t.from_account_id = a.id OR t.to_account_id = a.id)
+       FROM ledger_entries le
+       JOIN accounts a ON le.account_id = a.id
        WHERE a.user_id = $1`,
       [userId]
     );
 
     const { rows } = await pool.query(
-      `SELECT DISTINCT ON (t.id)
-              t.id, t.from_account_id, t.to_account_id,
-              t.type, t.amount, t.currency, t.status,
-              t.description, t.reference_number, t.balance_after,
-              t.created_at,
+      `SELECT le.transaction_id, le.entry_type, le.amount, le.balance_after, 
+              COALESCE(le.description, t.description) AS description, le.created_at,
+              t.id, t.status, t.currency, t.ip_address,
+              t.reference_number, t.type AS transaction_type,
               fa.account_number AS from_account_number,
               ta.account_number AS to_account_number,
+              fa.account_type AS from_account_type,
+              ta.account_type AS to_account_type,
+              fa.user_id AS from_user_id,
+              ta.user_id AS to_user_id,
               fu.first_name || ' ' || fu.last_name AS from_user_name,
-              tu.first_name || ' ' || tu.last_name AS to_user_name
-       FROM transactions t
+              tu.first_name || ' ' || tu.last_name AS to_user_name,
+              EXISTS (SELECT 1 FROM fraud_flags ff WHERE ff.transaction_id = t.id) AS is_flagged
+       FROM ledger_entries le
+       JOIN transactions t ON le.transaction_id = t.id
+       JOIN accounts a ON le.account_id = a.id
        LEFT JOIN accounts fa ON t.from_account_id = fa.id
        LEFT JOIN accounts ta ON t.to_account_id = ta.id
        LEFT JOIN users fu ON fa.user_id = fu.id
        LEFT JOIN users tu ON ta.user_id = tu.id
-       WHERE fa.user_id = $1 OR ta.user_id = $1
-       ORDER BY t.id, t.created_at DESC
+       WHERE a.user_id = $1
+       ORDER BY le.created_at DESC
        LIMIT $2 OFFSET $3`,
       [userId, limit, offset]
     );
-
-    // Re-sort by created_at since DISTINCT ON requires ORDER BY on t.id first
-    rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
     return {
       transactions: rows,
@@ -193,9 +202,9 @@ const TransactionModel = {
    */
   async countByUserId(userId) {
     const { rows } = await pool.query(
-      `SELECT COUNT(DISTINCT t.id)::int AS total
-       FROM transactions t
-       JOIN accounts a ON (t.from_account_id = a.id OR t.to_account_id = a.id)
+      `SELECT COUNT(*)::int AS total
+       FROM ledger_entries le
+       JOIN accounts a ON le.account_id = a.id
        WHERE a.user_id = $1`,
       [userId]
     );
@@ -211,23 +220,29 @@ const TransactionModel = {
    */
   async getRecentByUserId(userId, limit = 5) {
     const { rows } = await pool.query(
-      `SELECT DISTINCT ON (t.id)
-              t.id, t.type, t.amount, t.status,
-              t.description, t.reference_number, t.created_at,
+      `SELECT le.transaction_id, le.entry_type, le.amount, le.balance_after, 
+              COALESCE(le.description, t.description) AS description, le.created_at,
+              t.id, t.status, t.currency, t.ip_address,
+              t.reference_number, t.type AS transaction_type,
               fa.account_number AS from_account_number,
               ta.account_number AS to_account_number,
+              fa.account_type AS from_account_type,
+              ta.account_type AS to_account_type,
+              fa.user_id AS from_user_id,
+              ta.user_id AS to_user_id,
               tu.first_name || ' ' || tu.last_name AS to_user_name
-       FROM transactions t
+       FROM ledger_entries le
+       JOIN transactions t ON le.transaction_id = t.id
+       JOIN accounts a ON le.account_id = a.id
        LEFT JOIN accounts fa ON t.from_account_id = fa.id
        LEFT JOIN accounts ta ON t.to_account_id = ta.id
        LEFT JOIN users tu ON ta.user_id = tu.id
-       WHERE fa.user_id = $1 OR ta.user_id = $1
-       ORDER BY t.id, t.created_at DESC
+       WHERE a.user_id = $1
+       ORDER BY le.created_at DESC
        LIMIT $2`,
       [userId, limit]
     );
 
-    rows.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     return rows;
   },
 };

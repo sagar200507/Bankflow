@@ -1,19 +1,23 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, FileText, Download } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowDownLeft, ArrowUpRight, ArrowLeftRight, FileText, Download, ShieldAlert } from 'lucide-react';
 import { transactionsAPI, accountsAPI } from '../services/api';
-import { formatCurrency, formatDateTime, getStatusColor, getTypeColor, getTransactionAmountStyling } from '../utils/formatters';
+import { formatCurrency, formatDateTime, getStatusColor, getTypeColor, getTransactionAmountStyling, getTransactionDescription, isInternalTransfer } from '../utils/formatters';
 import { generateReceipt } from '../utils/receiptGenerator';
 import toast, { Toaster } from 'react-hot-toast';
+import FraudExplanation from '../components/history/FraudExplanation';
+import { useAuth } from '../context/AuthContext';
 import './TransactionsPage.css';
 
 export default function TransactionsPage() {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState('all');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({});
+  const [expandedFlagRow, setExpandedFlagRow] = useState(null);
 
   useEffect(() => {
     accountsAPI.getAll().then(({ data }) => setAccounts(data.data.accounts || [])).catch(() => {});
@@ -53,27 +57,53 @@ export default function TransactionsPage() {
           ) : (
             <div className="txn-list">
               {transactions.map((txn, i) => {
-                const Icon = typeIcons[txn.type] || ArrowLeftRight;
+                const actualType = txn.transaction_type || txn.type;
+                const Icon = typeIcons[actualType] || ArrowLeftRight;
                 return (
-                  <motion.div key={txn.id} className="txn-row" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}>
-                    <div className="txn-icon" style={{ background: `${getTypeColor(txn.type)}15`, color: getTypeColor(txn.type) }}><Icon size={18} /></div>
-                    <div className="txn-details">
-                      <span className="txn-desc">{txn.description || txn.type}</span>
-                      <span className="txn-ref">{txn.reference_number}</span>
-                    </div>
-                    <div className="txn-amount" style={{ color: getTransactionAmountStyling(txn.type).color }}>
-                      {getTransactionAmountStyling(txn.type).prefix}{formatCurrency(txn.amount)}
-                    </div>
-                    <span className="txn-status" style={{ background: `${getStatusColor(txn.status)}15`, color: getStatusColor(txn.status) }}>{txn.status}</span>
-                    <span className="txn-date">{formatDateTime(txn.created_at)}</span>
-                    <button 
-                      className="txn-receipt-btn" 
-                      onClick={() => generateReceipt(txn)}
-                      title="Download Receipt"
-                    >
-                      <Download size={16} />
-                    </button>
-                  </motion.div>
+                  <div key={txn.ledger_id || txn.id} className="txn-row-container">
+                    <motion.div className="txn-row" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.03 }}>
+                      <div className="txn-icon" style={{ background: `${getTypeColor(actualType)}15`, color: getTypeColor(actualType) }}><Icon size={18} /></div>
+                      <div className="txn-details">
+                        <span className="txn-desc" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {getTransactionDescription(txn)}
+                          {isInternalTransfer(txn) && (
+                            <span style={{ fontSize: '10px', background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
+                              ↔ Internal Transfer
+                            </span>
+                          )}
+                        </span>
+                        <span className="txn-ref">{txn.reference_number}</span>
+                      </div>
+                      <div className="txn-amount" style={{ color: getTransactionAmountStyling(txn).color }}>
+                        {getTransactionAmountStyling(txn).prefix}{formatCurrency(Math.abs(txn.amount))}
+                      </div>
+                      <span className="txn-status" style={{ background: `${getStatusColor(txn.status)}15`, color: getStatusColor(txn.status) }}>{txn.status}</span>
+                      <span className="txn-date">{formatDateTime(txn.created_at)}</span>
+                      <div className="txn-actions">
+                        {txn.is_flagged && (
+                          <button 
+                            className={`txn-flag-btn ${expandedFlagRow === txn.id ? 'active' : ''}`} 
+                            onClick={() => setExpandedFlagRow(prev => prev === txn.id ? null : txn.id)}
+                            title="Why was this flagged?"
+                          >
+                            <ShieldAlert size={16} />
+                          </button>
+                        )}
+                        <button 
+                          className="txn-receipt-btn" 
+                          onClick={() => generateReceipt(txn)}
+                          title="Download Receipt"
+                        >
+                          <Download size={16} />
+                        </button>
+                      </div>
+                    </motion.div>
+                    <AnimatePresence>
+                      {expandedFlagRow === txn.id && (
+                        <FraudExplanation transactionId={txn.id} onClose={() => setExpandedFlagRow(null)} />
+                      )}
+                    </AnimatePresence>
+                  </div>
                 );
               })}
             </div>

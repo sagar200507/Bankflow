@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Plus, ArrowDownLeft, ArrowUpRight, X, Copy } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { accountsAPI, transactionsAPI } from '../services/api';
-import { formatCurrency, formatAccountNumber, formatDateTime, getTransactionAmountStyling } from '../utils/formatters';
+import { formatCurrency, formatAccountNumber, formatDateTime, getTransactionAmountStyling, getTransactionDescription, isInternalTransfer } from '../utils/formatters';
 import toast, { Toaster } from 'react-hot-toast';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import './AccountsPage.css';
@@ -98,7 +98,14 @@ export default function AccountsPage() {
         {loading ? (
           <div className="accounts-grid">{[1,2,3].map(i => <div key={i} className="account-card skeleton" />)}</div>
         ) : accounts.length === 0 ? (
-          <div className="empty-state"><Wallet size={48} /><h3>No accounts yet</h3><p>Create your first bank account to get started.</p></div>
+          <div className="empty-state">
+            <Wallet size={48} />
+            <h3>No accounts yet</h3>
+            <p>Create your first bank account to get started.</p>
+            <button className="btn-primary" onClick={() => setModal('create')} style={{ marginTop: '16px' }}>
+              <Plus size={16} /> Create Account
+            </button>
+          </div>
         ) : (
           <div className="accounts-grid">
             {accounts.map((acc, i) => (
@@ -164,11 +171,18 @@ export default function AccountsPage() {
                   return (
                     <motion.div key={txn.id} className="preview-txn-row" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                       <div className="preview-txn-info">
-                        <div className="preview-txn-desc">{txn.description || txn.type}</div>
+                        <div className="preview-txn-desc" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {getTransactionDescription(txn)}
+                          {isInternalTransfer(txn) && (
+                            <span style={{ fontSize: '10px', background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
+                              ↔ Internal Transfer
+                            </span>
+                          )}
+                        </div>
                         <div className="preview-txn-date">{formatDateTime(txn.created_at)}</div>
                       </div>
-                      <div className="preview-txn-amount" style={{ color: getTransactionAmountStyling(txn.type).color }}>
-                        {getTransactionAmountStyling(txn.type).prefix}{formatCurrency(txn.amount)}
+                      <div className="preview-txn-amount" style={{ color: getTransactionAmountStyling(txn).color }}>
+                        {getTransactionAmountStyling(txn).prefix}{formatCurrency(Math.abs(txn.amount))}
                       </div>
                     </motion.div>
                   )

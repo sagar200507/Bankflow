@@ -39,19 +39,45 @@ export const getTypeColor = (type) => {
   return map[type] || 'var(--text-muted)';
 };
 
-export const getTransactionAmountStyling = (type) => {
-  const isIncoming = type === 'deposit';
+export const getTransactionAmountStyling = (txn) => {
+  const isIncoming = txn.entry_type === 'CREDIT';
+  const isOutgoing = txn.entry_type === 'DEBIT';
+
   return {
-    prefix: isIncoming ? '+' : '-',
-    color: isIncoming ? 'var(--accent-green)' : type === 'withdrawal' ? 'var(--danger)' : 'var(--text-primary)',
-    cssClass: isIncoming ? 'transaction-row__amount--credit' : type === 'withdrawal' ? 'transaction-row__amount--debit' : 'transaction-row__amount--neutral'
+    prefix: isIncoming ? '+' : isOutgoing ? '-' : '',
+    color: isIncoming ? 'var(--accent-green)' : isOutgoing ? 'var(--danger)' : 'var(--text-primary)',
+    cssClass: isIncoming ? 'transaction-row__amount--credit' : isOutgoing ? 'transaction-row__amount--debit' : 'transaction-row__amount--neutral'
   };
 };
 
-export const maskAccountNumber = (num) => {
-  if (!num) return '—';
-  const str = String(num);
-  return `XXXX XXXX ${str.slice(-4)}`;
+
+export const isInternalTransfer = (txn) => {
+  const actualType = txn.transaction_type || txn.type;
+  return actualType === 'transfer' && txn.from_user_id === txn.to_user_id;
+};
+
+const formatAccountName = (type, number) => {
+  const masked = number ? `(••${String(number).slice(-4)})` : '';
+  if (type) {
+    const capitalized = type.charAt(0).toUpperCase() + type.slice(1);
+    return `${capitalized} ${masked}`.trim();
+  }
+  return `Account ${masked}`.trim();
+};
+
+export const getTransactionDescription = (txn) => {
+  const actualType = txn.transaction_type || txn.type;
+  
+  if (actualType === 'transfer') {
+    if (txn.entry_type === 'DEBIT') {
+      return `Transfer to ${formatAccountName(txn.to_account_type, txn.to_account_number)}`;
+    } else if (txn.entry_type === 'CREDIT') {
+      return `Transfer from ${formatAccountName(txn.from_account_type, txn.from_account_number)}`;
+    }
+  }
+  
+  // Fallback to description from DB (or legacy logic)
+  return txn.description || actualType;
 };
 
 export const formatNumber = (num) => {

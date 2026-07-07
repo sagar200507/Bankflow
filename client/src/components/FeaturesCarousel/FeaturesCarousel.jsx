@@ -8,7 +8,7 @@ const features = [
   { id: 1, title: 'Fast Transfers', desc: 'Move money globally with optimal routing and zero hidden fees.', icon: Zap },
   { id: 2, title: 'Real-time Analytics', desc: 'Track cash flow, categorize spending, and forecast runway instantly.', icon: BarChart3 },
   { id: 3, title: 'Account Management', desc: 'Open unlimited checking, savings, and operating accounts in seconds.', icon: Landmark },
-  { id: 4, title: 'Fraud Protection', desc: 'Machine learning models that adapt to and block emerging threats.', icon: ShieldAlert },
+  { id: 4, title: 'Fraud Protection', desc: 'Rule-based detection that flags anomalies in real time using transaction velocity, spending patterns, and location signals.', icon: ShieldAlert },
   { id: 5, title: 'Flexible Loans', desc: 'Access fast capital based on your real-time revenue and cash flow.', icon: Banknote },
 ];
 

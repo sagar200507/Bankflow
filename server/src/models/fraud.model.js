@@ -66,6 +66,20 @@ const FraudModel = {
   },
 
   /**
+   * Get all fraud flags for a specific transaction.
+   *
+   * @param {string} transactionId - Transaction UUID
+   * @returns {Array} Array of fraud flags
+   */
+  async getFlagsByTransactionId(transactionId) {
+    const { rows } = await pool.query(
+      `SELECT * FROM fraud_flags WHERE transaction_id = $1`,
+      [transactionId]
+    );
+    return rows;
+  },
+
+  /**
    * Get fraud flags for a user (paginated).
    *
    * @param {string} userId - User UUID
@@ -236,6 +250,67 @@ const FraudModel = {
     );
     return rows[0];
   },
+
+  /**
+   * Get similar past flags for the same user (for context retrieval).
+   */
+  async getSimilarPastFlags(userId, currentFlagType, limit = 3) {
+    const { rows } = await pool.query(
+      `SELECT flag_type, severity, metadata, is_resolved, resolution_note, created_at
+       FROM fraud_flags
+       WHERE user_id = $1 AND flag_type = $2
+       ORDER BY created_at DESC
+       LIMIT $3`,
+      [userId, currentFlagType, limit]
+    );
+    return rows;
+  },
+
+  // ══════════════════════════════════════════════════════════
+  //  FRAUD EXPLANATIONS (AI LAYER)
+  // ══════════════════════════════════════════════════════════
+
+  async saveExplanation(transactionId, explanation, retrievedContext, modelUsed) {
+    const { rows } = await pool.query(
+      `INSERT INTO fraud_explanations (transaction_id, explanation, retrieved_context, model_used)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (transaction_id) DO UPDATE 
+       SET explanation = EXCLUDED.explanation,
+           retrieved_context = EXCLUDED.retrieved_context,
+           model_used = EXCLUDED.model_used
+       RETURNING *`,
+      [transactionId, explanation, JSON.stringify(retrievedContext), modelUsed]
+    );
+    return rows[0];
+  },
+
+  async getExplanationByTransactionId(transactionId) {
+    const { rows } = await pool.query(
+      `SELECT * FROM fraud_explanations WHERE transaction_id = $1`,
+      [transactionId]
+    );
+    return rows[0] || null;
+  },
+
+  async saveExplanationTurn(transactionId, question, answer, retrievedContext, modelUsed) {
+    const { rows } = await pool.query(
+      `INSERT INTO fraud_explanation_turns (transaction_id, question, answer, retrieved_context, model_used)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [transactionId, question, answer, JSON.stringify(retrievedContext), modelUsed]
+    );
+    return rows[0];
+  },
+
+  async getExplanationTurnsByTransactionId(transactionId) {
+    const { rows } = await pool.query(
+      `SELECT * FROM fraud_explanation_turns 
+       WHERE transaction_id = $1 
+       ORDER BY created_at ASC`,
+      [transactionId]
+    );
+    return rows;
+  }
 };
 
 module.exports = FraudModel;

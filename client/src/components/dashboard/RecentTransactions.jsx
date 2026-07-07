@@ -13,7 +13,8 @@ import {
   ArrowLeftRight,
   Receipt,
 } from 'lucide-react';
-import { formatCurrency, formatDate, getTransactionAmountStyling } from '../../utils/formatters';
+import { formatCurrency, formatDate, getTransactionAmountStyling, getTransactionDescription, isInternalTransfer } from '../../utils/formatters';
+import { useAuth } from '../../context/AuthContext';
 import './RecentTransactions.css';
 
 const typeConfig = {
@@ -51,6 +52,7 @@ const rowVariants = {
 };
 
 const RecentTransactions = ({ transactions = [] }) => {
+  const { user } = useAuth();
   const isEmpty = transactions.length === 0;
 
   return (
@@ -87,9 +89,8 @@ const RecentTransactions = ({ transactions = [] }) => {
           animate="visible"
         >
           {transactions.map((tx) => {
-            const config = typeConfig[tx.type] || typeConfig.transfer;
+            const config = typeConfig[tx.transaction_type || tx.type] || typeConfig.transfer;
             const IconComp = config.icon;
-            const isCredit = tx.type === 'deposit';
 
             return (
               <motion.div
@@ -104,19 +105,24 @@ const RecentTransactions = ({ transactions = [] }) => {
 
                 {/* Info */}
                 <div className="transaction-row__info">
-                  <div className="transaction-row__description">
-                    {tx.description || tx.name}
+                  <div className="transaction-row__description" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {getTransactionDescription(tx)}
+                    {isInternalTransfer(tx) && (
+                      <span style={{ fontSize: '10px', background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: '4px', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
+                        ↔ Internal Transfer
+                      </span>
+                    )}
                   </div>
                   <div className="transaction-row__date">
-                    {formatDate(tx.date || tx.createdAt)}
+                    {formatDate(tx.created_at || tx.date || tx.createdAt)}
                   </div>
                 </div>
 
                 {/* Amount */}
                 <div
-                  className={`transaction-row__amount ${getTransactionAmountStyling(tx.type).cssClass}`}
+                  className={`transaction-row__amount ${getTransactionAmountStyling(tx).cssClass}`}
                 >
-                  {getTransactionAmountStyling(tx.type).prefix}{formatCurrency(Math.abs(tx.amount))}
+                  {getTransactionAmountStyling(tx).prefix}{formatCurrency(Math.abs(tx.amount))}
                 </div>
 
                 {/* Status badge */}

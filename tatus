@@ -1,0 +1,39 @@
+warning: in the working copy of 'client/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/FeaturesCarousel/FeaturesCarousel.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/components/dashboard/RecentTransactions.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/AccountsPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/TransactionsPage.css', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/pages/TransactionsPage.jsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/services/api.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/utils/formatters.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'client/src/utils/receiptGenerator.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/.env.example', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/package.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/db/migrations/run.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/models/fraud.model.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/models/transaction.model.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/routes/transaction.routes.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/services/account.service.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'server/src/services/transaction.service.js', LF will be replaced by CRLF the next time Git touches it
+ client/package-lock.json                           | 1342 [32m++++++++++++++++++[m[31m--[m
+ client/package.json                                |    1 [32m+[m
+ .../FeaturesCarousel/FeaturesCarousel.jsx          |    2 [32m+[m[31m-[m
+ .../components/dashboard/RecentTransactions.jsx    |   22 [32m+[m[31m-[m
+ client/src/pages/AccountsPage.jsx                  |   24 [32m+[m[31m-[m
+ client/src/pages/TransactionsPage.css              |   33 [32m+[m[31m-[m
+ client/src/pages/TransactionsPage.jsx              |   76 [32m+[m[31m-[m
+ client/src/services/api.js                         |    2 [32m+[m
+ client/src/utils/formatters.js                     |   44 [32m+[m[31m-[m
+ client/src/utils/receiptGenerator.js               |   11 [32m+[m[31m-[m
+ server/.env.example                                |    3 [32m+[m
+ server/package-lock.json                           |   82 [32m++[m
+ server/package.json                                |   10 [32m+[m[31m-[m
+ server/src/db/migrations/run.js                    |    2 [32m+[m
+ server/src/models/fraud.model.js                   |   75 [32m++[m
+ server/src/models/transaction.model.js             |   85 [32m+[m[31m-[m
+ server/src/routes/transaction.routes.js            |   47 [32m+[m
+ server/src/services/account.service.js             |   21 [32m+[m
+ server/src/services/transaction.service.js         |   20 [32m+[m
+ 19 files changed, 1725 insertions(+), 177 deletions(-)

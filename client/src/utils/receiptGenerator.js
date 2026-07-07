@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import { formatCurrency, formatDateTime, getTransactionAmountStyling } from './formatters';
+import { formatCurrency, formatDateTime, getTransactionAmountStyling, getTransactionDescription } from './formatters';
 
 export const generateReceipt = (transaction, fromAccountDetails = null, toAccountDetails = null) => {
   const doc = new jsPDF();
@@ -48,7 +48,7 @@ export const generateReceipt = (transaction, fromAccountDetails = null, toAccoun
     y += 16;
   };
 
-  const amountStyle = getTransactionAmountStyling(transaction.type);
+  const amountStyle = getTransactionAmountStyling(transaction);
   const formattedAmount = `${amountStyle.prefix}${formatCurrency(Math.abs(transaction.amount))}`;
 
   // Helper to mask account ID if full details aren't provided
@@ -69,9 +69,10 @@ export const generateReceipt = (transaction, fromAccountDetails = null, toAccoun
   
   addRow('Amount', formattedAmount);
   
-  if (transaction.description) {
-    addRow('Description', transaction.description);
-  }
+  // We'll just print the newly enhanced description. 
+  // getTransactionDescription gives us "Transfer to Savings Account" 
+  // or falls back to standard description.
+  addRow('Description', getTransactionDescription(transaction));
   
   // Footer
   doc.setFontSize(9);

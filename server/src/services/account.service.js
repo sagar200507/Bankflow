@@ -22,6 +22,7 @@
 const pool = require('../config/database');
 const AccountModel = require('../models/account.model');
 const TransactionModel = require('../models/transaction.model');
+const LedgerEntryModel = require('../models/ledgerEntry.model');
 const FraudDetectionService = require('./fraud.service');
 const CacheService = require('./cache.service');
 const ApiError = require('../utils/ApiError');
@@ -186,6 +187,16 @@ const AccountService = {
         balanceAfter: newBalance,
       });
 
+      // ── Create ledger entry ──────────────────────────────
+      await LedgerEntryModel.create(client, {
+        transactionId: transaction.id,
+        accountId: accountId,
+        entryType: 'CREDIT',
+        amount,
+        balanceAfter: newBalance,
+        description: 'Cash Deposit',
+      });
+
       await client.query('COMMIT');
 
       logger.info('Deposit completed', {
@@ -284,6 +295,16 @@ const AccountService = {
         referenceNumber: generateReferenceNumber(),
         ipAddress,
         balanceAfter: newBalance,
+      });
+
+      // ── Create ledger entry ──────────────────────────────
+      await LedgerEntryModel.create(client, {
+        transactionId: transaction.id,
+        accountId: accountId,
+        entryType: 'DEBIT',
+        amount,
+        balanceAfter: newBalance,
+        description: 'Cash Withdrawal',
       });
 
       await client.query('COMMIT');

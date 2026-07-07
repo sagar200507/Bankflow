@@ -26,6 +26,7 @@
 const pool = require('../config/database');
 const AccountModel = require('../models/account.model');
 const TransactionModel = require('../models/transaction.model');
+const LedgerEntryModel = require('../models/ledgerEntry.model');
 const FraudDetectionService = require('./fraud.service');
 const CacheService = require('./cache.service');
 const ApiError = require('../utils/ApiError');
@@ -141,6 +142,25 @@ const TransactionService = {
         referenceNumber: generateReferenceNumber(),
         ipAddress,
         balanceAfter: newSenderBalance,
+      });
+
+      // ── Create ledger entries ──────────────────────────────
+      await LedgerEntryModel.create(client, {
+        transactionId: transaction.id,
+        accountId: fromAccountId,
+        entryType: 'DEBIT',
+        amount,
+        balanceAfter: newSenderBalance,
+        description: `Transfer to ${toAccount.account_number}`,
+      });
+
+      await LedgerEntryModel.create(client, {
+        transactionId: transaction.id,
+        accountId: toAccountId,
+        entryType: 'CREDIT',
+        amount,
+        balanceAfter: newReceiverBalance,
+        description: `Transfer from ${fromAccount.account_number}`,
       });
 
       await client.query('COMMIT');

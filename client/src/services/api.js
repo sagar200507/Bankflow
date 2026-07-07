@@ -92,6 +92,8 @@ export const transactionsAPI = {
   getAll: (params) => api.get('/transactions', { params }),
   getByAccount: (id, params) => api.get(`/transactions/account/${id}`, { params }),
   getById: (id) => api.get(`/transactions/${id}`),
+  getFraudExplanation: (id) => api.get(`/transactions/${id}/fraud-explanation`),
+  askFraudQuestion: (id, question) => api.post(`/transactions/${id}/fraud-explanation/ask`, { question }),
 };
 
 export const analyticsAPI = {
