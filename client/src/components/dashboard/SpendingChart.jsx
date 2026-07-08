@@ -97,7 +97,7 @@ const SpendingChart = ({ data, period = 'Last 12 Months' }) => {
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#64748b', fontSize: 12 }}
-              tickFormatter={(v) => `$${(v / 1000).toFixed(1)}k`}
+              tickFormatter={(v) => v === 0 ? '0' : `₹${(v / 1000).toFixed(0)}k`}
             />
 
             <Tooltip content={<CustomTooltip />} cursor={false} />

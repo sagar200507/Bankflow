@@ -9,7 +9,6 @@
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
-  height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -40,8 +39,7 @@
 
 /* ── Chart Container ─────────────────────────────────────────── */
 .spending-chart__container {
-  flex: 1;
-  min-height: 250px;
+  height: 250px;
 }
 
 /* ── Custom Tooltip ──────────────────────────────────────────── */
@@ -57,7 +55,9 @@
 
 .chart-tooltip__label {
   font-size: var(--text-xs);
-  color: var(--muted);
+  color: #94a3b8; /* Slate light gray */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: var(--space-1);
   font-weight: var(--font-medium);
 }
@@ -65,7 +65,7 @@
 .chart-tooltip__value {
   font-size: var(--text-base);
   font-weight: var(--font-bold);
-  color: var(--text);
+  color: #ffffff;
 }
 
 /* ── Empty / Loading ─────────────────────────────────────────── */

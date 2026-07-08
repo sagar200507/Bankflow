@@ -17,6 +17,7 @@ import {
 
 import StatCard from '../components/dashboard/StatCard';
 import RecentTransactions from '../components/dashboard/RecentTransactions';
+import SpendingChart from '../components/dashboard/SpendingChart';
 import { useAuth } from '../context/AuthContext';
 import { analyticsAPI } from '../services/api';
 import './DashboardPage.css';
@@ -30,6 +31,7 @@ const pageVariants = {
 export default function DashboardPage() {
   const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
+  const [spendingData, setSpendingData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -42,8 +44,34 @@ export default function DashboardPage() {
       try {
         setLoading(true);
         setError(null);
-        const { data } = await analyticsAPI.getDashboard();
-        setDashboardData(data.data);
+        const [dashRes, spendRes] = await Promise.all([
+          analyticsAPI.getDashboard(),
+          analyticsAPI.getSpending(6)
+        ]);
+        setDashboardData(dashRes.data?.data || {});
+        
+        // Map the backend data (total_spent) to what Recharts expects (spending)
+        // Ensure we always have exactly 6 months of data, even if the DB returned fewer rows.
+        const rawSpending = spendRes.data?.data?.spending || [];
+        const formattedSpending = [];
+        
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date();
+          d.setMonth(d.getMonth() - i);
+          const monthStr = d.toLocaleString('default', { month: 'short' });
+          
+          const found = rawSpending.find(item => {
+            const itemDate = new Date(item.month);
+            return itemDate.getFullYear() === d.getFullYear() && itemDate.getMonth() === d.getMonth();
+          });
+
+          formattedSpending.push({
+            month: monthStr,
+            spending: found ? parseFloat(found.total_spent) : 0
+          });
+        }
+        
+        setSpendingData(formattedSpending);
       } catch (err) {
         console.error('Dashboard fetch error:', err);
         setError('Unable to load dashboard data. Please try again.');
@@ -76,7 +104,9 @@ export default function DashboardPage() {
     );
   }
 
-  const { stats, recentTransactions } = dashboardData || {};
+  const { stats, recentTransactions = [] } = dashboardData || {};
+  
+  console.log("ACTUAL CHART DATA:", spendingData);
 
   return (
     <motion.div
@@ -162,8 +192,10 @@ export default function DashboardPage() {
       {/* ── Two-Column Body ── */}
       <div className="dashboard-body">
         
-        {/* Left Column: Recent Transactions */}
+        {/* Left Column: Spending & Recent Transactions */}
         <div className="dashboard-body__left">
+          <SpendingChart data={spendingData} period="Last 6 Months" />
+          <div style={{ height: '24px' }}></div>
           <RecentTransactions transactions={recentTransactions} />
         </div>
 

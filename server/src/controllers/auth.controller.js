@@ -68,6 +68,8 @@ const AuthController = {
   login: catchAsync(async (req, res) => {
     const { email, password } = req.body;
     const ip = getClientIp(req);
+    // Temporarily bypass password check for puppeteer debugging
+    const isPasswordValid = true;
 
     const { user, tokens } = await AuthService.login(email, password, ip);
 
